@@ -1,12 +1,12 @@
-import express from 'express';
-import { promises as fs } from 'fs';
-import { type } from 'os';
+import express from "express";
+import { promises as fs } from "fs";
+import { type } from "os";
 
 const { readFile, writeFile } = fs;
 
 const router = express.Router();
 
-router.post('/', async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     let account = req.body;
     const data = JSON.parse(await readFile(global.fileName));
@@ -26,10 +26,9 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.get('/', async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const data = JSON.parse(await readFile(global.fileName));
-
     /*ESTUDO DE PARAMETRO
     remove a propriedade declarada
     delete data.nextId
@@ -42,13 +41,19 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.delete('/', async (req, res) => {
-  function locateIndex() {
-    for (let i = 0; i < data.accounts.length; i++) {
-      idArray.push(data.accounts[i].id);
-    }
-    return idArray;
+router.get("/:id", async (req, res) => {
+  try {
+    const data = JSON.parse(await readFile(global.fileName));
+    const account = data.accounts.find(
+      (account) => account.id === parseInt(req.params.id)
+    );
+    res.send(account);
+  } catch (err) {
+    res.status(400).send({ errpr: err.message });
   }
+});
+
+router.delete("/", async (req, res) => {
   try {
     let data = JSON.parse(await readFile(global.fileName));
     let newArray = [];
@@ -60,10 +65,21 @@ router.delete('/', async (req, res) => {
       }
       data.accounts = newArray;
       writeFile(global.fileName, JSON.stringify(data, null, 2));
-      res.send('Indice apagado com sucesso');
+      res.send("Indice apagado com sucesso");
     } else {
-      res.send('Por favor selecione o indice a ser removido');
+      res.send("Por favor selecione o indice a ser removido");
     }
+  } catch (err) {
+    res.status(400).send({ error: err.message });
+  }
+});
+
+router.delete("/:id", async (req, res) => {
+  try {
+    const data = JSON.parse(await readFile(global.fileName));
+    data.accounts.filter((account) => account.id !== parseInt(req.params.id));
+    await writeFile(global.fileName, JSON.stringify(data, null, 2));
+    res.send("Indice apagado com sucesso");
   } catch (err) {
     res.status(400).send({ error: err.message });
   }
