@@ -1,6 +1,5 @@
 import express from "express";
 import { promises as fs } from "fs";
-import { type } from "os";
 
 const { readFile, writeFile } = fs;
 
@@ -8,8 +7,8 @@ const router = express.Router();
 
 router.post("/", async (req, res) => {
   try {
-    let account = req.body;
     const data = JSON.parse(await readFile(global.fileName));
+    let account = req.body;
     account = {
       id: data.nextId++,
       ...account,
@@ -55,7 +54,6 @@ router.get("/:id", async (req, res) => {
 
 router.delete("/", async (req, res) => {
   try {
-    let data = JSON.parse(await readFile(global.fileName));
     let newArray = [];
     if (req.query.id) {
       for (let i = 0; i < data.accounts.length; i++) {
@@ -76,7 +74,6 @@ router.delete("/", async (req, res) => {
 
 router.delete("/:id", async (req, res) => {
   try {
-    const data = JSON.parse(await readFile(global.fileName));
     data.accounts.filter((account) => account.id !== parseInt(req.params.id));
     await writeFile(global.fileName, JSON.stringify(data, null, 2));
     res.send("Indice apagado com sucesso");
@@ -84,4 +81,34 @@ router.delete("/:id", async (req, res) => {
     res.status(400).send({ error: err.message });
   }
 });
+
+router.put("/", async (req, res) => {
+  try {
+    const account = req.body;
+    const data = JSON.parse(await readFile(global.fileName));
+    const index = data.accounts.findIndex((a) => a.id === account.id);
+    data.accounts[index] = account;
+    console.log(data.accounts[index]);
+    await writeFile(global.fileName, JSON.stringify(data, null, 2));
+    res.send("Registro alterado com sucesso!");
+  } catch (err) {
+    res.status(400).send({ error: err.message });
+  }
+});
+
+router.patch("/updateBalance", async (req, res) => {
+  try {
+    const account = req.body;
+    const data = JSON.parse(await readFile(global.fileName));
+    const index = data.accounts.findIndex((a) => a.id === account.id);
+    data.accounts[index].balance = account.balance;
+    console.log(data.accounts[index]);
+    await writeFile(global.fileName, JSON.stringify(data, null, 2));
+
+    res.send("Registro alterado com sucesso!");
+  } catch (err) {
+    res.status(400).send({ error: err.message });
+  }
+});
+
 export default router;
